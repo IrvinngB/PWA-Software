@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, Circle, Target, TrendingUp, Calendar, Flame } from "lucide-react"
+import { useState, useRef } from "react"
 
 export default function Dashboard() {
   const { habits, habitLogs, toggleHabitCompletion, getTodayCompletedHabits, getStreakForHabit, getHabitProgress } =
@@ -15,6 +16,36 @@ export default function Dashboard() {
   const activeHabits = habits.filter((habit) => habit.isActive)
   const todayCompletedCount = getTodayCompletedHabits()
   const completionRate = activeHabits.length > 0 ? Math.round((todayCompletedCount / activeHabits.length) * 100) : 0
+
+  // Huevo de Pascua - contador silencioso para el Android
+  const [eggCount, setEggCount] = useState(0)
+  const [showAndroid, setShowAndroid] = useState(false)
+  const clickTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  const handleActiveHabitsClick = () => {
+    // Incrementar contador silenciosamente (sin indicadores visuales)
+    setEggCount(prev => {
+      const newCount = prev + 1
+      
+      // Reiniciar el temporizador de clicks
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current)
+      }
+      
+      // Si no sigues haciendo clic en 2 segundos, se reinicia el contador
+      clickTimerRef.current = setTimeout(() => {
+        setEggCount(0)
+      }, 2000)
+      
+      // Mostrar Android al llegar a 20 clics
+      if (newCount >= 20) {
+        setShowAndroid(true)
+        return 0 // reiniciar contador
+      }
+      
+      return newCount
+    })
+  }
 
   const isHabitCompletedToday = (habitId: string) => {
     return habitLogs.some((log) => log.habitId === habitId && log.date === today && log.completed)
@@ -30,6 +61,57 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Android Easter Egg Modal */}
+      {showAndroid && (
+        <div 
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fadeIn" 
+          onClick={() => setShowAndroid(false)}
+        >
+          <div className="p-6 bg-white rounded-lg max-w-2xl shadow-xl animate-scaleIn">
+            <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">¡Encontraste al Android!</h2>
+            <pre className="text-xs leading-tight font-mono overflow-x-auto p-4 bg-gray-100 rounded text-gray-800">
+{`────────────█───────────────█
+────────────██─────────────██
+─────────────███████████████
+────────────█████████████████
+───────────███████████████████
+──────────████──█████████──████
+─────────███████████████████████
+────────█████████████████████████
+────────█████████████████████████
+───███──▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒──███
+──█████─█████████████████████████─█████
+──█████─████████████████──███████─█████
+──█████─██████────────█──█────███─█████
+──█████─█████─▓▓▓▓▓▓▓█──█▓▓─▓─███─█████
+──█████─███─█─▓▓▓▓▓▓█──█▓▓─▓▓─███─█████
+──█████─██──█─▓▓▓▓▓█──█▓▓─▓▓▓─███─█████
+──█████─███─█─▓▓▓▓█──█▓▓─▓▓▓▓─███─█████
+──█████─█████────█──█─────────███─█████
+──█████─█████████──██████████████─█████
+───███──████████──███████████████──███
+────────█████████████████████████
+─────────███████████████████████
+──────────█████████████████████
+─────────────██████───██████
+─────────────██████───██████
+─────────────██████───██████
+─────────────██████───██████
+──────────────████─────████`}
+            </pre>
+            <p className="mt-4 text-center text-sm text-gray-600">
+              ¡Felicidades! Has descubierto el Android secreto. 🤖
+            </p>
+            <Button 
+              className="w-full mt-4" 
+              onClick={() => setShowAndroid(false)}
+            >
+              Cerrar
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -46,7 +128,10 @@ export default function Dashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card 
+          onClick={handleActiveHabitsClick} 
+          className="cursor-pointer hover:shadow-md transition-shadow"
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Hábitos Activos</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />

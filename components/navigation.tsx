@@ -13,6 +13,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: Home },
   { name: "Mis Hábitos", href: "/habits", icon: Target },
   { name: "Agregar Hábito", href: "/add-habit", icon: Plus },
+  { name: "Configuración", href: "/settings", icon: Settings },
 ]
 
 export function Navigation() {
